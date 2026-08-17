@@ -16,7 +16,7 @@ DATABASES={'default':dj_database_url.config(default=db or f'sqlite:///{BASE_DIR/
 AUTH_PASSWORD_VALIDATORS=[{'NAME':'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},{'NAME':'django.contrib.auth.password_validation.MinimumLengthValidator'}]
 LANGUAGE_CODE='en-us'; TIME_ZONE='Africa/Accra'; USE_I18N=True; USE_TZ=True
 STATIC_URL='/static/'; STATIC_ROOT=BASE_DIR/'staticfiles'; DEFAULT_AUTO_FIELD='django.db.models.BigAutoField'
-FRONTEND_URL=os.getenv('FRONTEND_URL','https://cyberguard-cybersecurity-training-o5rajfj1m-wiltech.vercel.app/')
+FRONTEND_URL=os.getenv('FRONTEND_URL','https://cyberguard-cybersecurity-training.vercel.app/')
 CORS_ALLOWED_ORIGINS=list(dict.fromkeys([
     x.strip()
     for x in os.getenv('CORS_ALLOWED_ORIGINS', FRONTEND_URL + ',http://localhost:3000').split(',')
