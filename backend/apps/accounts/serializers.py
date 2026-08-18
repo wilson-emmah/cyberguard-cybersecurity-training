@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+
 from rest_framework import serializers
 
 from .models import Profile
@@ -13,31 +14,49 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = [
+            "username",
+            "email",
+            "password",
+        ]
 
     def validate_email(self, value):
+        value = value.lower().strip()
+
         if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError(
-                'An account with this email already exists.'
+                "An account with this email already exists."
             )
 
-        return value.lower()
+        return value
+
+    def validate_username(self, value):
+        value = value.strip()
+
+        if User.objects.filter(username__iexact=value).exists():
+            raise serializers.ValidationError(
+                "This username is already taken."
+            )
+
+        return value
 
     def validate_password(self, value):
         validate_password(value)
         return value
 
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
+        user = User.objects.create_user(
+            username=validated_data["username"],
+            email=validated_data["email"],
+            password=validated_data["password"],
+        )
 
-        # Make sure every newly registered user has a profile
         Profile.objects.get_or_create(user=user)
 
         return user
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     points = serializers.SerializerMethodField()
     level = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
@@ -45,25 +64,26 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id',
-            'username',
-            'email',
-            'points',
-            'level',
-            'role'
+            "id",
+            "username",
+            "email",
+            "points",
+            "level",
+            "role",
         ]
 
     def get_profile(self, user):
-        profile, created = Profile.objects.get_or_create(
-            user=user
-        )
+        profile, _ = Profile.objects.get_or_create(user=user)
         return profile
 
     def get_points(self, user):
-        return self.get_profile(user).points
+        profile = self.get_profile(user)
+        return profile.points
 
     def get_level(self, user):
-        return self.get_profile(user).level
+        profile = self.get_profile(user)
+        return profile.level
 
     def get_role(self, user):
-        return self.get_profile(user).role
+        profile = self.get_profile(user)
+        return profile.role
