@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -19,7 +19,8 @@ class MeView(APIView):
 
     def get(self, request):
         return Response(
-            UserSerializer(request.user).data
+            UserSerializer(request.user).data,
+            status=status.HTTP_200_OK
         )
 
 
@@ -27,12 +28,11 @@ class AdminUsersView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        users = User.objects.select_related(
-            "profile"
-        ).order_by("-date_joined")
+        users = User.objects.all().order_by("-date_joined")
 
         return Response(
-            UserSerializer(users, many=True).data
+            UserSerializer(users, many=True).data,
+            status=status.HTTP_200_OK
         )
 
 
