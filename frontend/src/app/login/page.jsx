@@ -3,80 +3,96 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { API, getErrorMessage, readResponse, saveTokens } from '../../lib/api';
+import { api, saveTokens } from '../../lib/api';
 
 export default function Login() {
-  const [e, setE] = useState('');
+  const [error, setError] = useState('');
   const router = useRouter();
 
-  async function submit(x) {
-    x.preventDefault();
-    setE('');
+  async function submit(e) {
+    e.preventDefault();
+    setError('');
 
-    const form = x.currentTarget;
-    const f = new FormData(form);
+    const form = new FormData(e.currentTarget);
 
     try {
-      const a = await fetch(`${API}/auth/token/`, {
+      // Get JWT tokens
+      const tokens = await api('/auth/token/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: f.get('username'),
-          password: f.get('password')
-        })
+          username: form.get('username'),
+          password: form.get('password'),
+        }),
       });
 
-      const { data, raw } = await readResponse(a);
+      // Save tokens
+      saveTokens(tokens);
 
-      if (!a.ok) {
-        throw new Error(getErrorMessage(data, raw, 'Invalid login.'));
+      // Get logged-in user
+      const user = await api('/auth/me/');
+
+      // Redirect based on role
+      if (user.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
       }
 
-      saveTokens(data);
-
-      const mResponse = await fetch(`${API}/auth/me/`, {
-        headers: { Authorization: `Bearer ${data.access}` },
-        cache: 'no-store'
-      });
-
-      const { data: m, raw: mRaw } = await readResponse(mResponse);
-
-      if (!mResponse.ok) {
-        throw new Error(getErrorMessage(m, mRaw, 'Unable to load your account.'));
-      }
-
-      router.push(m.role === 'admin' ? '/admin' : '/dashboard');
-    } catch (a) {
-      setE(a?.message || 'Unable to connect to the login server.');
+    } catch (err) {
+      console.error('LOGIN ERROR:', err);
+      setError(err.message || 'Unable to sign in. Please try again.');
     }
   }
 
   return (
     <main className="auth">
       <div className="authCard">
-        <div className="brand">Cyber<span>Guard</span></div>
+
+        <div className="brand">
+          Cyber<span>Guard</span>
+        </div>
+
         <p className="eyebrow">SIGN IN</p>
+
         <h1>Welcome back</h1>
 
         <form onSubmit={submit}>
+
           <label>
             Username
-            <input name="username" required />
+            <input
+              name="username"
+              autoComplete="username"
+              required
+            />
           </label>
 
           <label>
             Password
-            <input name="password" type="password" required />
+            <input
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+            />
           </label>
 
-          <button className="button full">Sign In</button>
+          <button className="button full" type="submit">
+            Sign In
+          </button>
+
         </form>
 
-        {e && <p className="error">{e}</p>}
+        {error && (
+          <p className="error">
+            {error}
+          </p>
+        )}
 
         <p>
           New user? <Link href="/register">Create an account</Link>
         </p>
+
       </div>
     </main>
   );
