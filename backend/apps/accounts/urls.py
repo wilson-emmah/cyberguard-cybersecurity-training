@@ -13,44 +13,19 @@ from .views import (
 
 
 urlpatterns = [
-    # User registration
-    path(
-        'auth/register/',
-        RegisterView.as_view(),
-        name='register'
-    ),
+    path("auth/register/", RegisterView.as_view(), name="register"),
 
-    # Login - returns access and refresh JWT tokens
-    path(
-        'auth/token/',
-        TokenObtainPairView.as_view(),
-        name='token_obtain_pair'
-    ),
+    path("auth/token/", TokenObtainPairView.as_view(), name="token"),
 
-    # Refresh access token
     path(
-        'auth/token/refresh/',
+        "auth/token/refresh/",
         TokenRefreshView.as_view(),
-        name='token_refresh'
+        name="token_refresh",
     ),
 
-    # Currently authenticated user
-    path(
-        'auth/me/',
-        MeView.as_view(),
-        name='me'
-    ),
+    path("auth/me/", MeView.as_view(), name="me"),
 
-    # Admin endpoints
-    path(
-        'admin/users/',
-        AdminUsersView.as_view(),
-        name='admin-users'
-    ),
+    path("admin/users/", AdminUsersView.as_view(), name="admin_users"),
 
-    path(
-        'admin/stats/',
-        AdminStatsView.as_view(),
-        name='admin-stats'
-    ),
+    path("admin/stats/", AdminStatsView.as_view(), name="admin_stats"),
 ]
