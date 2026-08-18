@@ -1,7 +1,6 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
-
 from .models import Profile
 
 
@@ -25,10 +24,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
-
-        # Make sure every registered user has a profile
         Profile.objects.get_or_create(user=user)
-
         return user
 
 
