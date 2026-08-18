@@ -1,13 +1,15 @@
-const DEFAULT_API_URL = 'https://cybersecurity-training-platform.onrender.com/api';
-
-export const API = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/+$/, '');
+export const API =
+  process.env.NEXT_PUBLIC_API_URL ||
+  'https://cyberguard-cybersecurity-training.onrender.com/api';
 
 export const getToken = () =>
-  typeof window === 'undefined' ? null : localStorage.getItem('access_token');
+  typeof window === 'undefined'
+    ? null
+    : localStorage.getItem('access_token');
 
-export const saveTokens = (d) => {
-  localStorage.setItem('access_token', d.access);
-  localStorage.setItem('refresh_token', d.refresh || '');
+export const saveTokens = (data) => {
+  localStorage.setItem('access_token', data.access);
+  localStorage.setItem('refresh_token', data.refresh || '');
 };
 
 export const logout = () => {
@@ -15,52 +17,38 @@ export const logout = () => {
   localStorage.removeItem('refresh_token');
 };
 
-export async function readResponse(r) {
-  const contentType = r.headers.get('content-type') || '';
-  const text = await r.text();
-
-  if (contentType.includes('application/json')) {
-    try {
-      return { data: JSON.parse(text), raw: text };
-    } catch {
-      return { data: null, raw: text };
-    }
-  }
-
-  return { data: null, raw: text };
-}
-
-export function getErrorMessage(data, raw, fallback = 'Request failed') {
-  if (data?.detail) return String(data.detail);
-  if (data && typeof data === 'object') {
-    const values = Object.values(data).flat(Infinity).filter(Boolean);
-    if (values.length) return values.join(' ');
-  }
-  if (raw && raw.trim().startsWith('<')) {
-    return 'The server returned an HTML page instead of the CyberGuard API. Check NEXT_PUBLIC_API_URL and the backend deployment.';
-  }
-  return raw?.trim() || fallback;
-}
-
 export async function api(path, options = {}) {
   const token = getToken();
+
   const headers = {
     'Content-Type': 'application/json',
-    ...(options.headers || {})
+    ...(options.headers || {}),
   };
 
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
-  const r = await fetch(`${API}${path}`, {
+  const response = await fetch(`${API}${path}`, {
     ...options,
     headers,
-    cache: 'no-store'
+    cache: 'no-store',
   });
 
-  const { data, raw } = await readResponse(r);
+  let data = null;
 
-  if (!r.ok) {
-    throw new Error(getErrorMessage(data, raw));
+  try {
+    data = await response.json();
+  } catch {
+    // Response was not JSON
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data?.detail ||
+      Object.values(data || {}).flat().join(' ') ||
+      `API request failed (${response.status})`
+    );
   }
 
   return data;
