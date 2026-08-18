@@ -17,20 +17,19 @@ class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        return Response(
-            UserSerializer(request.user).data
-        )
+        return Response(UserSerializer(request.user).data)
 
 
 class AdminUsersView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
+        users = User.objects.select_related(
+            'profile'
+        ).order_by('-date_joined')
+
         return Response(
-            UserSerializer(
-                User.objects.select_related('profile').order_by('-date_joined'),
-                many=True
-            ).data
+            UserSerializer(users, many=True).data
         )
 
 
