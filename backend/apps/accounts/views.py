@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -27,8 +28,8 @@ class AdminUsersView(APIView):
 
     def get(self, request):
         users = User.objects.select_related(
-            'profile'
-        ).order_by('-date_joined')
+            "profile"
+        ).order_by("-date_joined")
 
         return Response(
             UserSerializer(users, many=True).data
@@ -42,7 +43,7 @@ class AdminStatsView(APIView):
         from apps.training.models import Scenario, Attempt
 
         return Response({
-            'users': User.objects.count(),
-            'scenarios': Scenario.objects.count(),
-            'attempts': Attempt.objects.count()
+            "users": User.objects.count(),
+            "scenarios": Scenario.objects.count(),
+            "attempts": Attempt.objects.count(),
         })
