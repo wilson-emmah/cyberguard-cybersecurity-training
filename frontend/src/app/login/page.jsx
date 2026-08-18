@@ -3,68 +3,89 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api, saveTokens } from '../../lib/api';
+import { API, saveTokens } from '../../lib/api';
 
 export default function Login() {
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  async function submit(e) {
-    e.preventDefault();
+  async function submit(event) {
+    event.preventDefault();
     setError('');
+    setLoading(true);
 
-    const form = new FormData(e.currentTarget);
+    const form = new FormData(event.currentTarget);
 
     try {
-      // Get JWT tokens
-      const tokens = await api('/auth/token/', {
+      const tokenResponse = await fetch(`${API}/auth/token/`, {
         method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           username: form.get('username'),
           password: form.get('password'),
         }),
       });
 
-      // Save tokens
-      saveTokens(tokens);
+      const contentType = tokenResponse.headers.get('content-type') || '';
+      const data = contentType.includes('application/json')
+        ? await tokenResponse.json()
+        : null;
 
-      // Get logged-in user
-      const user = await api('/auth/me/');
-
-      // Redirect based on role
-      if (user.role === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/dashboard');
+      if (!tokenResponse.ok) {
+        throw new Error(
+          data?.detail ||
+            `Login failed (${tokenResponse.status}). Check the Django API deployment.`
+        );
       }
 
+      if (!data?.access) {
+        throw new Error('The API did not return an access token.');
+      }
+
+      saveTokens(data);
+
+      const meResponse = await fetch(`${API}/auth/me/`, {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${data.access}`,
+        },
+        cache: 'no-store',
+      });
+
+      const meType = meResponse.headers.get('content-type') || '';
+      const me = meType.includes('application/json')
+        ? await meResponse.json()
+        : null;
+
+      if (!meResponse.ok) {
+        throw new Error(
+          me?.detail || `Profile request failed (${meResponse.status}).`
+        );
+      }
+
+      router.replace(me.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err) {
-      console.error('LOGIN ERROR:', err);
-      setError(err.message || 'Unable to sign in. Please try again.');
+      setError(err.message || 'Unable to sign in.');
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <main className="auth">
       <div className="authCard">
-
-        <div className="brand">
-          Cyber<span>Guard</span>
-        </div>
-
+        <div className="brand">Cyber<span>Guard</span></div>
         <p className="eyebrow">SIGN IN</p>
-
         <h1>Welcome back</h1>
 
         <form onSubmit={submit}>
-
           <label>
             Username
-            <input
-              name="username"
-              autoComplete="username"
-              required
-            />
+            <input name="username" autoComplete="username" required />
           </label>
 
           <label>
@@ -77,22 +98,16 @@ export default function Login() {
             />
           </label>
 
-          <button className="button full" type="submit">
-            Sign In
+          <button className="button full" disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
-
         </form>
 
-        {error && (
-          <p className="error">
-            {error}
-          </p>
-        )}
+        {error && <p className="error">{error}</p>}
 
         <p>
           New user? <Link href="/register">Create an account</Link>
         </p>
-
       </div>
     </main>
   );
