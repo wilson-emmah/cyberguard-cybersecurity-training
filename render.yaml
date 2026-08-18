@@ -1,10 +1,10 @@
 services:
   - type: web
-    name: cybersecurity-training-platform
+    name: cyberguard-cybersecurity-training
     runtime: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput
-    startCommand: gunicorn config.wsgi:application
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
     healthCheckPath: /healthz/
     envVars:
       - key: DJANGO_SECRET_KEY
@@ -12,8 +12,8 @@ services:
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: "cybersecurity-training-platform.onrender.com"
+        value: "cyberguard-cybersecurity-training.onrender.com"
       - key: FRONTEND_URL
-        sync: false
+        value: "https://cyberguard-cybersecurity-training.vercel.app"
       - key: DATABASE_URL
         sync: false
