@@ -11,17 +11,10 @@ class Profile(models.Model):
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
-        related_name="profile"
+        related_name="profile",
     )
-
-    role = models.CharField(
-        max_length=20,
-        choices=ROLE_CHOICES,
-        default="user"
-    )
-
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="user")
     points = models.PositiveIntegerField(default=0)
-
     level = models.PositiveIntegerField(default=1)
 
     def __str__(self):

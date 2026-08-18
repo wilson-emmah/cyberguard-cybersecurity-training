@@ -5,13 +5,14 @@ class IsAdminUser(BasePermission):
     message = "Administrator access required."
 
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
+        user = request.user
+        if not user or not user.is_authenticated:
             return False
 
-        if request.user.is_staff or request.user.is_superuser:
+        if user.is_staff or user.is_superuser:
             return True
 
         try:
-            return request.user.profile.role == "admin"
+            return user.profile.role == "admin"
         except Exception:
             return False

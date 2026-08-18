@@ -6,11 +6,11 @@ from .models import Profile
 
 
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.get_or_create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    Profile.objects.get_or_create(user=instance)
+def ensure_user_profile(sender, instance, **kwargs):
+    """Guarantee that every Django user has a Profile."""
+    Profile.objects.get_or_create(
+        user=instance,
+        defaults={
+            "role": "admin" if instance.is_staff or instance.is_superuser else "user"
+        },
+    )
