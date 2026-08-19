@@ -6,7 +6,7 @@ This package fixes the Django/Next.js production authentication path.
 
 Use the existing Render service and redeploy from GitHub. The build command runs:
 
-`python manage.py migrate --noinput`
+`python manage.py migrate --noinput && python manage.py ensure_profiles && python manage.py collectstatic --noinput`
 
 The package now contains initial migrations for `accounts`, `training`, and `gamification`, including a data migration that creates profiles for existing Django users.
 
