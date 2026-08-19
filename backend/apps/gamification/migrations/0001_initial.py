@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 
@@ -6,30 +7,49 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("auth", "0012_alter_user_first_name_max_length"),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="Badge",
+            name="Profile",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("name", models.CharField(max_length=100)),
-                ("description", models.TextField()),
-                ("icon", models.CharField(default="🏆", max_length=20)),
-                ("requirement_points", models.PositiveIntegerField(default=0)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "role",
+                    models.CharField(
+                        choices=[
+                            ("user", "User"),
+                            ("admin", "Admin"),
+                        ],
+                        default="user",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "points",
+                    models.PositiveIntegerField(default=0),
+                ),
+                (
+                    "level",
+                    models.PositiveIntegerField(default=1),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="profile",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-        ),
-        migrations.CreateModel(
-            name="UserBadge",
-            fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("earned_at", models.DateTimeField(auto_now_add=True)),
-                ("badge", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="gamification.badge")),
-                ("user", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="auth.user")),
-            ],
-            options={
-                "unique_together": {("user", "badge")},
-            },
         ),
     ]
