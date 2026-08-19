@@ -1,5 +1,4 @@
 from django.contrib.auth.models import User
-
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,10 +17,7 @@ class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        return Response(
-            UserSerializer(request.user).data,
-            status=status.HTTP_200_OK
-        )
+        return Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
 
 
 class AdminUsersView(APIView):
@@ -29,21 +25,19 @@ class AdminUsersView(APIView):
 
     def get(self, request):
         users = User.objects.all().order_by("-date_joined")
-
-        return Response(
-            UserSerializer(users, many=True).data,
-            status=status.HTTP_200_OK
-        )
+        return Response(UserSerializer(users, many=True).data)
 
 
 class AdminStatsView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        from apps.training.models import Scenario, Attempt
+        from apps.training.models import Attempt, Scenario
 
-        return Response({
-            "users": User.objects.count(),
-            "scenarios": Scenario.objects.count(),
-            "attempts": Attempt.objects.count(),
-        })
+        return Response(
+            {
+                "users": User.objects.count(),
+                "scenarios": Scenario.objects.count(),
+                "attempts": Attempt.objects.count(),
+            }
+        )
